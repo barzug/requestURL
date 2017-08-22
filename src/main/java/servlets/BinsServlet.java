@@ -1,6 +1,8 @@
 package servlets;
 
 import com.google.gson.Gson;
+import executor.DBException;
+import executor.DBService;
 import models.Bin;
 
 import javax.servlet.ServletException;
@@ -9,25 +11,34 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Vector;
 
 public class BinsServlet extends HttpServlet {
 
-    private HashMap<String, Bin> bins = new HashMap<String, Bin>();
-    private Vector<String> history = new Vector<String>();
+    private final DBService dbService;
+
+    public BinsServlet(DBService dbService) {
+        this.dbService = dbService;
+    }
+
+    private Vector<String> history = new Vector<>();
 
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response) throws ServletException, IOException {
 
-        String name = request.getParameter("name");
+        String pathInfo = request.getPathInfo(); // /{value}/test
 
-        if ( name == null ) {
-            Vector<Bin> filteredBins = new Vector<Bin>();
-            for (String aHistory : history) {
-                Bin bin = bins.get(aHistory);
-                if (bin != null) {
-                    filteredBins.add(bin);
-                }
+        //проверка на null нужна
+        String[] pathParts = pathInfo.split("/");
+
+
+        if ( pathParts.length < 2 ) {
+            Vector<Bin> filteredBins = null;
+            try {
+                filteredBins = dbService.getManyBins(history);
+            } catch (DBException e) {
+                e.printStackTrace();
             }
 
             String json = new Gson().toJson(filteredBins);
@@ -37,7 +48,13 @@ public class BinsServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_OK);
 
         } else {
-            Bin bin = bins.get(name);
+            String name = pathParts[1];
+            Bin bin = null;
+            try {
+                bin = dbService.getOneBin(name);
+            } catch (DBException e) {
+                e.printStackTrace();
+            }
 
             if (bin == null) {
                 String json = new Gson().toJson("error");
@@ -60,8 +77,21 @@ public class BinsServlet extends HttpServlet {
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws ServletException, IOException {
 
+        String pathInfo = request.getPathInfo();
+        System.out.println(pathInfo);
+        if ( pathInfo != null && !Objects.equals(pathInfo, "/")) {
+            System.out.println(1);
+            response.setContentType("text/html;charset=utf-8");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
         Bin bin = new Bin();
-        bins.put(bin.getName(), bin);
+        try {
+            dbService.addBin(bin);
+        } catch (DBException e) {
+            e.printStackTrace();
+        }
         history.add(bin.getName());
 
         String json = new Gson().toJson(bin);
