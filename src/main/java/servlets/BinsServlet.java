@@ -27,13 +27,9 @@ public class BinsServlet extends HttpServlet {
     public void doGet(HttpServletRequest request,
                       HttpServletResponse response) throws ServletException, IOException {
 
-        String pathInfo = request.getPathInfo(); // /{value}/test
+        String pathInfo = request.getPathInfo();
 
-        //проверка на null нужна
-        String[] pathParts = pathInfo.split("/");
-
-
-        if ( pathParts.length < 2 ) {
+        if (pathInfo == null || Objects.equals(pathInfo, "/")) {
             Vector<Bin> filteredBins = null;
             try {
                 filteredBins = dbService.getManyBins(history);
@@ -46,8 +42,13 @@ public class BinsServlet extends HttpServlet {
             response.setCharacterEncoding("UTF-8");
             response.getWriter().write(json);
             response.setStatus(HttpServletResponse.SC_OK);
+            return;
 
-        } else {
+        }
+
+        String[] pathParts = pathInfo.split("/");
+
+        if (pathParts.length == 2) {
             String name = pathParts[1];
             Bin bin = null;
             try {
@@ -72,15 +73,30 @@ public class BinsServlet extends HttpServlet {
             }
         }
 
+        if (!Objects.equals(pathParts[2], "requests") ) {
+            response.setContentType("text/html;charset=utf-8");
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
+
+        if (pathParts.length == 3) {
+
+            return;
+        }
+        if (pathParts.length == 4) {
+
+            return;
+        }
+
+        response.setContentType("text/html;charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
     }
 
     public void doPost(HttpServletRequest request,
                        HttpServletResponse response) throws ServletException, IOException {
 
         String pathInfo = request.getPathInfo();
-        System.out.println(pathInfo);
-        if ( pathInfo != null && !Objects.equals(pathInfo, "/")) {
-            System.out.println(1);
+        if (pathInfo != null && !Objects.equals(pathInfo, "/")) {
             response.setContentType("text/html;charset=utf-8");
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;

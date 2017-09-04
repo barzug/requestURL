@@ -48,10 +48,15 @@ public class Request implements Serializable {
 
     @Column(name = "body")
     private String body;
+
+
+    @ManyToOne
+    @JoinColumn(name="bin_id", nullable=false)
+    private Bin bin;
 //    private HashMap<String, String> formValue;
 //    private Vector<String> formFile;
 
-    public Request(HttpServletRequest request, int maxBodySize) throws IOException {
+    public Request(HttpServletRequest request, Bin bin) throws IOException {
         name = StringGenerate.Generate(12);
         created = new Date().getTime();
         method = request.getMethod();
@@ -66,6 +71,7 @@ public class Request implements Serializable {
         body = request.getReader().lines().reduce("", (accumulator, actual) -> accumulator + actual);
         //??
 
+        header = new HashMap<>();
         Enumeration headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String key = (String) headerNames.nextElement();
@@ -73,7 +79,7 @@ public class Request implements Serializable {
             header.put(key, value);
         }
 
-
+        this.bin = bin;
 
     }
 }

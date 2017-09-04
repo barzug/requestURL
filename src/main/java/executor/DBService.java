@@ -1,6 +1,7 @@
 package executor;
 
 import dao.BinDAO;
+import dao.RequestDAO;
 import models.Bin;
 import models.Request;
 import org.hibernate.HibernateException;
@@ -14,6 +15,7 @@ import org.hibernate.service.ServiceRegistry;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 import java.util.Vector;
 
 public class DBService {
@@ -47,7 +49,6 @@ public class DBService {
         Configuration configuration = new Configuration();
         configuration.addAnnotatedClass(Bin.class);
         configuration.addAnnotatedClass(Request.class);
-
 
         configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
         configuration.setProperty("hibernate.connection.driver_class", "org.h2.Driver");
@@ -110,6 +111,44 @@ public class DBService {
             throw new DBException(e);
         }
     }
+
+    public long addRequest(Request request) throws DBException {
+        try {
+            Session session = sessionFactory.openSession();
+            Transaction transaction = session.beginTransaction();
+            RequestDAO dao = new RequestDAO(session);
+            long id = dao.insertRequest(request);
+            transaction.commit();
+            session.close();
+            return id;
+        } catch (HibernateException e) {
+            throw new DBException(e);
+        }
+    }
+
+//    public Request getOneRequest(String nameBin, String nameRequest) throws DBException {
+//        try {
+////            Session session = sessionFactory.openSession();
+////            BinDAO dao = new BinDAO(session);
+////            Bin bin = dao.getOneBin(name);
+////            session.close();
+////            return bin;
+//        } catch (HibernateException e) {
+//            throw new DBException(e);
+//        }
+//    }
+//
+//    public Set<Request> getManyRequests(String nameBin, int from, int to) throws DBException {
+//        try {
+////            Session session = sessionFactory.openSession();
+////            BinDAO dao = new BinDAO(session);
+////            Vector<Bin>  bins = dao.getManyBins(names);
+////            session.close();
+////            return bins;
+//        } catch (HibernateException e) {
+//            throw new DBException(e);
+//        }
+//    }
 
     private static SessionFactory createSessionFactory(Configuration configuration) {
         StandardServiceRegistryBuilder builder = new StandardServiceRegistryBuilder();

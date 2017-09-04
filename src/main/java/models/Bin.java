@@ -5,6 +5,8 @@ import utils.StringGenerate;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "bin")
@@ -26,6 +28,10 @@ public class Bin implements Serializable {
     @Column(name = "requestCount")
     private int requestCount;
 
+
+    @OneToMany(mappedBy="bin")
+    private Set<Request> requestSet = new HashSet<>(0);
+
     public Bin() {
         long now = new Date().getTime();
         created = now;
@@ -42,6 +48,9 @@ public class Bin implements Serializable {
         return id;
     }
 
+    public void setRequest(Request request) {
+        requestSet.add(request);
+    }
 //    public void setId(long id) {
 //        this.id = id;
 //    }
